@@ -61,15 +61,14 @@ node3                   Running           192.168.64.9     Ubuntu 20.04 LTS
                                           10.42.3.1
 ```  
 
-To use the K8s cluster we simply jump into `node0` that has kubectl setup and ready to go for us.
+To use the K8s cluster we simply jump into `node0` that has kubectl setup and ready to go for us. 
 ```multipass shell node0```  
 
-At the Linux prompt we can use any _kubectl_ we want like
-`kubectl get nodes`  
-`kubectl get pod -A`
-etc.
+At the Linux prompt we can use any _kubectl_ we want like 
+`kubectl get nodes`   
+`kubectl get pod -A`  
+etc.  
 
 ## Extras
 In node0, under $HOME we will find a `resources`  sub-directory.
 It contains some YAML K8s files declaration that we can use to run IRIS.
- 
