@@ -94,5 +94,6 @@ again keep checking what Multipass has to say about your VMs with `multipass lis
 
 
 ## Extras
-In node0, under $HOME we will find a `resources`  sub-directory.
+In *node0*, under $HOME you will find a `resources`  sub-directory.
 It contains some YAML K8s files declaration that we can use to run IRIS.
+

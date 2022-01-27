@@ -118,7 +118,7 @@ function createWorkerNodes()
 #
 function configDependencies()
 {
-  printf "\n\nInstalling Longhorn v1.2.3\n"
+  printf "\n\nInstalling Longhorn... \n"
   multipass exec node0 -- /bin/bash -c "kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.3/deploy/longhorn.yaml"
 
   printf "\n\nCopying resources...\n"
