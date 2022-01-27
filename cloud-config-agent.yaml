@@ -1,0 +1,47 @@
+#cloud-config
+#
+# Set the locale of the system
+locale: "en_US.UTF-8"
+
+# Set the timezone
+# timezone: "America/Denver"
+#timezone: "Europe/Rome"
+#timezone: "America/Vancouver"
+
+#manage_etc_hosts: true
+#ssh_authorized_keys:
+#  - ssh-rsa AAA..the-output-of-multipass.pub.. user@host
+#rsyslog:
+#  remotes:
+#    log_serv: "*.* @_rsyslog_ip_port_"
+
+# Default: false
+# Aliases: apt_update
+package_update: true
+package_upgrade: true 
+package_reboot_if_required: true
+
+# packages may be supplied as a single package name or as a list
+# with the format [<package>, <version>] wherein the specifc
+# package version will be installed.
+#packages:
+# - pwgen
+# - open-iscsi
+
+## from https://github.com/rajasoun/multipass-dev-box/blob/master/config/templates/cloud-init-template.yaml
+## Below is a Hack for MacOS & Multipass Issue
+## Ref: https://discourse.ubuntu.com/t/troubleshooting-networking-on-macos/12901
+runcmd:
+  - cp /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.bak
+  - sed -i -e '13i\\            nameservers:' /etc/netplan/50-cloud-init.yaml
+  - sed -i -e '14i\\                addresses:\ [8.8.8.8, 8.8.4.4]' /etc/netplan/50-cloud-init.yaml
+  - netplan apply
+  - systemd-resolve --status | grep 'DNS Servers' -A2
+  - DEBIAN_FRONTEND=noninteractive  apt-get update -y && apt-get upgrade -y && apt-get install -y jq
+  - apt-get -y autoremove
+
+#  - curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" K3S_NODE_NAME="node1" K3S_URL="https://172.16.249.16:6443" K3S_TOKEN="K109f939846d08a0d02634b43bf076df81d58cee05967de312797d867f5b6bb782a::server:dcae311c1fcf32023e1f7b30e14546e4" sh -
+#  - curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" K3S_NODE_NAME="node0" K3S_URL="https://172.16.249.:6443" sh - --token "K109f939846d08a0d02634b43bf076df81d58cee05967de312797d867f5b6bb782a::server:dcae311c1fcf32023e1f7b30e14546e4"
+# see output in /var/log/cloud-init-output.log
+final_message: "The system is finally up, after $UPTIME seconds"
+
