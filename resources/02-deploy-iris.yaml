@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: iris
-        image: store/intersystems/iris-community:2021.2.0.617.0 
+        #image: store/intersystems/iris-community:2021.2.0.649.0 
+        image: store/intersystems/iris-community-arm64:2021.2.0.649.0
         env:
         - name: ISC_DATA_DIRECTORY
           value: /storage/iris
