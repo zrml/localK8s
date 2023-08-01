@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iris-pod-0
+spec:
+  containers:
+  - name: iris
+    image: intersystems/iris:2020.3.0-dev
+    ports:
+      - containerPort: 1972
+      - containerPort: 52773

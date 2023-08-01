@@ -58,7 +58,7 @@ function createControlPlane()
   printf "\nCPUs:\t\t%s" $CPUS
   printf "\nMemory:\t\t%s" $MEM
   printf "\nDisk:\t\t%s\n" $DISK
-  multipass launch --name $K3S_NODE_NAME --cpus $CPUS --mem $MEM --disk $DISK -v --cloud-init cloud-config-server.yaml
+  multipass launch --name $K3S_NODE_NAME --cpus $CPUS --memory $MEM --disk $DISK -v --cloud-init cloud-config-server.yaml
 
   # workaround function for Multipass inconsistent behaviour
   #workaround
@@ -118,16 +118,17 @@ function createWorkerNodes()
 #
 function configDependencies()
 {
-  printf "\n\nInstalling Longhorn... \n"
-  multipass exec node0 -- /bin/bash -c "kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.3/deploy/longhorn.yaml"
+  # 1
+  printf "\n\nInstalling Helm... \n"
+  multipass exec node0 -- /bin/bash -c "curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
+  multipass exec node0 -- /bin/bash -c "chmod 700 /tmp/get_helm.sh"
+  multipass exec node0 -- /bin/bash -c "/tmp/get_helm.sh"
 
+  # 2
   printf "\n\nCopying resources...\n"
   if [ -d "./resources" ]
   then
-    # yes we could optimize it...
     multipass exec node0 -- /bin/bash -c "mkdir /home/ubuntu/resources"
-
-    # Dir 05
     cd "$WDIR"/resources
     multipass transfer files.tar.gz node0:/home/ubuntu/resources/files.tar.gz
     multipass exec node0 -- /bin/bash -c "cd /home/ubuntu/resources/ && tar zxvf files.tar.gz"
@@ -135,6 +136,56 @@ function configDependencies()
   else
     printf "\nFiles directory NOT present. Skipping copying of files."
   fi
+  
+  #3
+  printf "\n\nInstalling Longhorn... \n"
+  multipass exec node0 -- /bin/bash -c "kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.4.0/deploy/longhorn.yaml"
+  
+  # Enhancement...
+  printf "\n\nInstalling Longhorn ingress controller for UI...\n"
+  # as per https://longhorn.io/docs/1.3.0/deploy/accessing-the-ui/longhorn-ingress/
+  multipass exec node0 -- /bin/bash -c "USER=LHuser; PASSWORD=LHpass; echo \"${USER}:$(openssl passwd -stdin -apr1 <<< ${PASSWORD})\" >> auth"
+  #
+  # ***the above gives an error but it all seems to operate OK
+  # ./create-cluster.sh: line 147: PASSWORD: unbound variable
+ 
+  #
+  # create the secret
+  multipass exec node0 -- /bin/bash -c "kubectl -n longhorn-system create secret generic basic-auth --from-file=auth"
+  
+  # longhorn-ingress.yml
+multipass exec node0 -- /bin/bash -c "cat <<EOF | kubectl -n longhorn-system apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-ingress
+  namespace: longhorn-system
+  annotations:
+    # type of authentication
+    nginx.ingress.kubernetes.io/auth-type: basic
+    # prevent the controller from redirecting (308) to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+    # name of the secret that contains the user/password definitions
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    # message to display with an appropriate context why the authentication is required
+    nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required '
+    # custom max body size for file uploading like backing image uploading
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: longhorn-frontend
+            port:
+              number: 80
+EOF"
+
+  # use node0 local IP to connect to the Longhorn UI like: 
+  # http://192.168.64.52
 }
 
 # workaround for bug for moving the VM from Starting to Running
