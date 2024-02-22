@@ -6,6 +6,6 @@ export WRK_NODES_NUM=3
 
 # Ubuntu VM sizing used by Multipass
 export CPUS=1
-export MEM=4096M
+export MEM=5120M
 export DISK=15G
 # --

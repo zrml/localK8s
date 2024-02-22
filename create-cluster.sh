@@ -90,7 +90,7 @@ function createWorkerNodes()
     printf "\nDisk:\t\t%s" $DISK
     printf "\nNode0 URL:\t%s" $K3S_URL
     printf "\nToken:\t%s\n" $K3S_TOKEN
-    multipass launch --name $K3S_NODE_NAME --cpus $CPUS --mem $MEM --disk $DISK -v --cloud-init cloud-config-agent.yaml
+    multipass launch --name $K3S_NODE_NAME --cpus $CPUS --memory $MEM --disk $DISK -v --cloud-init cloud-config-agent.yaml
 
     # workaround function for Multipass inconsistent behaviour
     #workaround
